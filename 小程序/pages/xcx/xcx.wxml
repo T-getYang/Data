@@ -1,0 +1,45 @@
+<view >
+<button wx:if="{{!hasUserInfo && canIUse}}" open-type="getUserInfo" bindgetuserinfo="getUserInfo"> 获取头像昵称 </button>
+
+  <view wx:else class="mine">
+    <view style="background-color: rgb(208,146,132);">
+      <view class="profilephoto">
+        <view>
+          <view
+            class="theaccount"
+            style="position: absolute; z-index: 2; padding: 4px 12px; right: 0px; margin-top: -17px;  margin-right: 15px;"
+          >登出帐号</view>
+        </view>
+        <view>
+          <view class="headportrait">
+          <image bindtap="bindViewTap" class="userinfo-avatar" src="{{userInfo.avatarUrl}}" mode="cover"></image>
+          </view>
+        </view>
+        <view class="compellation">{{userInfo.nickName}}</view>
+      </view>
+      <view>
+     
+     
+        <view class="dynamicbookshel">
+          <button bindtap="add" class="typefaces">生成订单</button> 
+        </view>
+        
+      </view>
+      
+    </view>
+
+      <view class="ordercl" wx:for="{{orders}}" wx:for-index="idx"  wx:for-item="itemName">
+         <view class="ordercls">
+          <view class="ords">订单{{idx}}:</view>
+          <view class="ords">{{itemName.money}}元</view>
+          <view class="ords" wx:if="{{itemName.state==0}}" bindtap="pay" data-id="{{itemName.id}}">支付</view>
+          <view class="ords" bindtap="refund" wx:elif="{{itemName.state==1}}" data-id="{{itemName.id}}">退款</view>
+          <view class="ords" wx:else>订单已取消</view>
+          <view class="ords" bindtap="deletex" data-id="{{itemName.id}}">删除订单</view>
+         </view>
+      </view>
+
+  </view>
+</view> 
+
+

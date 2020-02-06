@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>数组</title>
+</head>
+
+<body>
+
+</body>
+<script>
+    let nums = [1, 2, 33, 3, 3, 3, 4, 62, 124, 12, 56, 1, 23, 45, 1, 2, 41, 2, 33, 55, 1, 2, 35, 23, 4, 54, 7, 1, 3, 34, 42, 3, 32, 32, 3, 3, 3, 3, 5];
+    let numsCopy = [3, 3, 5, 1, 5, 6, 1, 33, 5, 5, 134, 12, 412, 3, 3, 64, 634, 2134, 1234, 12, 34, 1234, 12, 4];
+    function num(nums) {   //最大最小平均
+        let minNum = 999;
+        let maxNum = 0;
+        let num = 0;
+        nums.forEach(n => {
+            num += n;
+            if (minNum > n) {
+                minNum = n;
+            }
+
+            if (maxNum < n) {
+                maxNum = n;
+            }
+        });
+        
+        return { minNum, maxNum, mean: num / nums.length };
+    }
+     
+    function duplicateRemoval(nums) {//去重
+        let temp = [];
+        for (let n of nums) {
+            if (temp.includes(n)) {
+                continue;
+            }
+            temp.push(n);
+        }
+        return temp;
+    }
+
+    function common(nums, numsCopy) {//共同
+        let temp = [];
+        for (let n of nums) {
+            if (numsCopy.includes(n)) {
+                if (temp.includes(n)) {
+                    continue;
+                }
+                temp.push(n);
+            }
+        }
+        return temp;
+    }
+    function maxCount(nums) {//共大
+        let count = 0;
+        let temp = [];
+        for (let n of nums) {
+            if (temp.filter(t => t.num == n).length > 0) {
+                temp.filter(t => t.num == n).forEach(t => t.count = t.count + 1);
+            } else {
+                temp.push({
+                    num: n,
+                    count: 1,
+                })
+            }
+        }
+        temp.forEach(t =>{
+            if(t.count > count){
+                count = t.count;
+            }
+        })
+        return temp.filter(t => t.count == count);
+    }
+    function count(nums){
+        let temp = [];
+        for (let n of nums) {
+            if (temp.filter(t => t.num == n).length > 0) {
+                temp.filter(t => t.num == n).forEach(t => t.count = t.count + 1);
+            } else {
+                temp.push({
+                    num: n,
+                    count: 1,
+                })
+            }
+        }
+        return temp.sort((a,b)=>{
+            return b.count - a.count;
+        })
+    }
+    document.write("原数组1：" + nums);
+    document.write("<br/><br/>原数组2：" + numsCopy);
+    document.write("<br/><br/>最小值：" + num(numsCopy).minNum + ",最大值：" + num(numsCopy).maxNum + ",平均值：" + num(numsCopy).mean);
+    document.write("<br/><br/>去重后：" + duplicateRemoval(numsCopy));
+    document.write("<br/><br/>升序：" + duplicateRemoval(numsCopy).sort((a, b) => {
+        return a - b;
+    }));
+    document.write("<br/><br/>降序：" + duplicateRemoval(numsCopy).sort((a, b) => {
+        return b - a;
+    }));
+    document.write("<br/><br/>两个数组共同出现数字：" + common(nums, numsCopy));
+    for (const m of maxCount(nums)) {
+        document.write("<br/><br/>出现的最多次数的数字："+m.num+",次数为："+m.count+"<br/>");
+    }
+    for (const m of count(nums)) {
+        document.write("<br/>数字:"+m.num+" - 出现次数:"+m.count);
+    }
+</script>
+
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.bootcss.com/axios/0.19.0/axios.js"></script>
+    <title>联级</title>
+</head>
+
+<body>
+    <div id="app" >
+        <select v-model="query.province" @change="getCity">
+            <option v-for="(p,index) in province" :value="index">{{p.name}}</option>
+        </select>
+        <select v-model="query.city" @change="getDistrict">
+            <option v-for="(c,index) in city" :value="index">{{c.name}}</option>
+        </select>
+        <select v-model="query.district" @change="getStreet">
+            <option v-for="(d,index) in district" :value="index">{{d.name}}</option>
+        </select>
+        <select v-model="query.street" @change="getText">
+            <option v-for="(s,index) in street" :value="index">{{s.name}}</option>
+        </select>
+        {{text}}
+    </div>
+    <script>
+        
+        const api = "https://restapi.amap.com/v3/config/district?parameters&key=4e8ac11918568ee6ea78b5de33ae40cf&subdistrict=1&keywords=";
+        new Vue({
+            el: "#app",
+            data() {
+                return {
+                    query: {
+                        province: 0,
+                        city: "",
+                        district: "",
+                        street: "",
+                    },
+                    province: [],
+                    city: [],
+                    district: [],
+                    street: [],
+                    text: "",
+                }
+            },
+            methods: {
+                async getProvince() {
+                        await axios.get(api).then(res => {
+                            this.province = res.data.districts[0].districts;
+                            this.province.unshift({ name: "请选择" });
+                        })
+
+                },
+
+                async getCity(){
+                    await axios.get(api + this.province[this.query.province].name).then(res => {
+                            this.city = res.data.districts[0].districts;
+                        })
+                        this.query = {
+                            province: this.query.province,
+                            city: "",
+                            district: "",
+                            street: ""
+                        };
+                        this.text = "";
+                },
+                async getDistrict() {
+                    await axios.get(api + this.city[this.query.city].name).then(res => {
+                            this.district = res.data.districts[0].districts;
+                        })
+                   
+                    this.query.district = "";
+                    this.query.street = "";
+                    this.text = "";
+                },
+                async getStreet() {
+                    await axios.get(api + this.district[this.query.district].name).then(res => {
+                            this.street = res.data.districts[0].districts;
+                        })
+                    console.info(this.query);
+                    if(this.query.street != ''){
+                    this.getText();
+                    }
+
+                },
+                async getText() {
+                    console.info(this.query.street);
+                    let province = await this.province[this.query.province].name
+                    let city = await this.city[this.query.city].name;
+                    let district = await this.district[this.query.district].name;
+                    let street = await this.street[this.query.street].name;
+                    if (street == "") {
+                        return;
+                    }
+                    this.text = await province + city + district + street;
+
+                }
+            },
+            created() {
+                this.getProvince();
+            },
+            
+        })
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>随机红包</title>
+</head>
+<body>
+    
+</body>
+<script>
+    function begin(){
+        let money =prompt("请输入红包金额","")
+        let num =prompt("请输入个数","")
+        if(num==1){
+            alert("数量为一不需要随机"+money)
+            return;
+        }
+        if(isDX(money,num)){
+            getPcs(money,num);
+        }else{
+            alert("红包分配不均匀");
+        }
+    }
+
+    begin()
+    function isDX(money,num){
+        let mix = 0.01;
+        let max = 200;
+        let ge = money/num;
+    
+        if(ge<mix){
+            return false;
+        }
+        if(ge>max){
+           return false;
+        }
+        return true
+    }
+
+    function getPcs(redmoney,num){
+        for (let i = num,x=1; i > 1; i--,x++) {
+            let money = getRandomMoney(i, redmoney);
+            redmoney = parseFloat(redmoney -money).toFixed(2)
+
+            console.info("第" + x + "个红包：" + money + "元 ,余额：" + redmoney);
+        }
+        console.info("最后个红包：" + redmoney + "元 ,余额：" + (redmoney - redmoney));
+    }
+
+    function getRandomMoney( count, remainMoney) {
+        let min = 0.01;
+        let max = remainMoney / count * 2;
+        let money = Math.random() * max;
+        money = money <= min ? 0.01: money;
+        money = Math.floor(money * 100) / 100;
+        return money;
+    }
+
+</script>
+</html>

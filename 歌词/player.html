@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="container">
+        <audio id="player" src="./0309_0058_0653_4cdeb7e22c72f120cf0019d9857f4b25.m4a" loop
+            controls preload></audio>
+        <div id="lrcArea"></div>
+    </div>
+
+    <div id="lrc" type="text" style="display: none;">
+        [00:00.000] 作曲 : Richard Carpenter and John Bettis
+        [00:00.959] 作词 : Richard Carpenter and John Bettis
+        [00:02.879]When i was young i'd listen to the radio </br> 当我年轻时， 常听收音机
+        [00:08.918]waiting for my favorite songs </br>等待心爱的歌曲
+        [00:14.559]When they played i'd sing along, </br>听到播放时便随声歌唱
+        [00:19.259]it made me smile. </br>这使我欢畅
+        [00:23.909]Those were such happy times and not so long ago </br>那时多么幸福的时刻！就在不久以前
+        [00:32.298]how i wondered where they'd gone. </br>我想知道他们曾去何处
+        [00:37.890]But they're back again just like a long lost friend </br>但我所有深爱的歌曲 他们现在又回来
+        [00:43.979]all the songs i love so well. </br>正如老友失散又重聚
+        [00:49.239]Every shalala every wo'wo </br>每一句 shalala每一句wo-wo
+        [00:55.829]still shines. </br>仍闪烁
+        [01:01.679]Every shing-a-ling-a-ling </br>每一句shinga-linga-ling
+        [01:04.249]that they're starting </br>他们又开始
+        [01:06.990]to sing so fine </br>唱得如此动听
+        [01:13.119]When they get to the part </br>当他们唱到一个地方
+        [01:15.669]Where he's breaking her heart </br>令她伤心断肠
+        [01:19.900]It can really make me cry </br>这真能叫我哭出来
+        [01:24.200]just like before. </br>正如从前一样
+        [01:29.289]It's yesterday once more. </br>仿佛昔日又重来
+        [01:38.890](shoobie do lang lang) </br>无比惆怅
+        [01:42.178]Looking back on how it was in years gone by </br>回头看岁月如何消逝
+        [01:47.828]and the good times that I had </br>这些过去的好时光
+        [01:54.190]makes today seem rather sad, </br>使今天显得令人哀伤。
+        [01:58.349]so much has changed. </br>使今天显得令人哀伤
+        [02:07.390]It was songs of love that i would sing to them </br>变化多大啊
+        [02:11.228]and i'd memorise each word. </br>我向他们唱爱的歌曲
+        [02:16.168]Those old melodies still sound so good to me </br>那些古老的曲调，在我听来还是那么好
+        [02:23.198]as they melt the years away </br>好像他们把岁月融消
+        [02:29.390]every shalala every wo'wo still shines </br>每一句sha-la-la-la每一句wo-wo仍闪烁
+        [02:39.998]every shing-a-ling-a-ling </br>每一句shinga-linga-ling
+        [02:42.327]that they're startingto sing </br>他们又开始
+        [02:45.648]so fine </br>唱得如此动听
+        [02:51.577]all my best memorise come back clearly to me </br>我所有美好的记忆清晰的重现
+        [02:56.868]Some can even make me cry </br>有一些仍能使我哭出来
+        [03:01.879]just like before. </br>正如从前一样
+        [03:07.698]It's yesterday once more. </br>仿佛昔日又重来
+        [03:10.659](shoobie do lang lang) </br>无比惆怅
+        [03:14.898]Every shalala every wo'wo still shines. </br>每一句sha-la-la-la每一句wo-wo仍闪烁
+        [03:26.238]Every shing-a-ling-a-ling </br>每一句shinga-linga-ling
+        [03:29.398]that they're starting to sing </br>他们又开始
+        [03:31.668]so fine </br>唱得如此动听
+        [03:36.898]Every shalala every wo'wo still shines. </br>每一句sha-la-la-la每一句wo-wo仍闪烁
+    </div>
+
+    <script>
+        var musicPlayer = function () {
+            return this.init.apply(this, arguments);
+        };
+
+        musicPlayer.prototype = {
+            constructor: musicPlayer,
+            init: function (options) {
+                if (isEmptyObj(options) || typeof options !== 'object') return;
+                this.player = options.player;
+                this.lrc = options.lrc;
+                this.lrcArea = options.lrcArea;
+
+                //用于保存歌词
+                this.lrcArr = [];
+                //用于保存时间戳
+                this.timestamp = [];
+                //处理歌词
+                this.handleLrc(this.lrc);
+                var that = this;
+
+                this.player.addEventListener('play',
+                    function () {
+                        that.play();
+                    },
+                    false);
+
+                this.player.addEventListener('pause',
+                    function () {
+                        that.pause();
+                    },
+                    false);
+
+                //歌词索引
+                this.idx = 0;
+            },
+            //格式化歌词
+            handleLrc: function (lrc) {
+                var re = /(\[.+\])(.+)?/gm,
+                    ul = cEl('ul'),
+                    frag = document.createDocumentFragment(),
+                    tmpArr,
+                    i,
+                    len;
+                this.lrcArea.innerHTML = '';
+                frag.appendChild(ul);
+                ul.id = 'c';
+                this.lrcArea.appendChild(frag);
+
+                var txt = lrc.replace(re,
+                    function (a, b, c) {
+                        return b + (c === undefined ? '&nbsp;' : c) + '\n';
+                    });
+
+                tmpArr = txt.split('\n');
+
+                //处理歌词
+                for (i = 0, len = tmpArr.length; i < len; i++) {
+                    var item = trim(tmpArr[i]);
+                    if (item.length > 0) {
+                        this.lrcArr.push(item);
+                    }
+                }
+
+                frag = document.createDocumentFragment();
+
+                for (i = 0, len = this.lrcArr.length; i < len; i++) {
+                    var li = cEl('li');
+                    if (i === 0) {
+                        li.className = 'cur';
+                    }
+                    li.innerHTML = this.lrcArr[i].replace(/\[.+\]/i, '');
+                    //处理时间
+                    this.timestamp.push(this.lrcArr[i].replace(re,
+                        function (a, b, c) {
+                            return b;
+                        }).replace('[', '').replace(']', ''));
+                    frag.appendChild(li);
+                }
+
+                this.timestamp.push(this.timestamp[this.timestamp.length - 1].split('.')[0].split(
+                    ':')[1] + ':' + [Number(this.timestamp[this.timestamp.length - 1].split('.')[0]
+                    .split(':')[1]) + 2] + '.000')
+
+                ul.appendChild(frag);
+                this.li = $('lrcArea').getElementsByTagName('li');
+            },
+            //播放
+            play: function () {
+                this.stop = false;
+                var that = this,
+                    player = this.player,
+                    i, len;
+
+                this.t = setInterval(function () {
+                        if (that.stop) return;
+                        that.curTime = player.currentTime;
+                        for (i = 0, len = that.timestamp.length - 1; i < len; i++) {
+                            var prevTime = that.formatTimeStamp(that.timestamp[i]),
+                                nextTime = that.formatTimeStamp(that.timestamp[i + 1]);
+                            //当前播放时间与前后歌词时间比较，如果位于这两者之间则转到该歌词
+
+                            if (parseFloat(that.curTime) <= nextTime) {
+                                that.scrollToLrc(i);
+                                return;
+                            }
+                        }
+                    },
+                    300);
+            },
+           
+            pause: function () { //暂停
+                this.stop = true;
+                clearInterval(this.t);
+            },
+            //格式化时间
+            formatTimeStamp: function (timestamp) {
+                var re = /([0-9]+):([0-9]+)\.([0-9]+)/i,
+                    seconds = timestamp.replace(re,
+                        function (a, b, c, d) {
+                            return Number(b * 60) + Number(c) + parseFloat('0.' + d);
+                        });
+                return seconds;
+            },
+            //歌词滚动
+            scrollToLrc: function (idx) {
+                var ds = getOffset(this.li[idx]).top,
+                    i,len;
+
+                //如果歌词索引没有变，则认为这句没有完成，不进行下一步处理
+                if (this.idx === idx) return;
+                this.idx = idx; //更新索引值并更新样式和位置
+                for (i = 0, len = this.li.length; i < len; i++) {
+                    this.li[i].className = '';
+                }
+                this.li[idx].className = 'cur';
+
+                this.lrcArea.scrollTop = ds - this.lrcArea.offsetHeight / 2;
+            }
+        };
+
+        function $(id) {
+            return typeof id === 'string' ? document.getElementById(id) : id;
+        }
+
+        function cEl(el) {
+            return document.createElement(el);
+        }
+
+        function trim(str) {
+            return str.replace(/(^\s*)|(\s*$)/g, "");
+        }
+
+        function isEmptyObj(o) {
+            for (var p in o) return false;
+            return true;
+        }
+
+        function getOffset(el) {
+            var parent = el.offsetParent,
+                left = el.offsetLeft,
+                top = el.offsetTop;
+
+            while (parent !== null) {
+                left += parent.offsetLeft;
+                top += parent.offsetTop;
+                parent = parent.offsetParent;
+            }
+
+            return {
+                left: left,
+                top: top
+            };
+        }
+
+        var p = new musicPlayer({
+            player: $('player'),
+            lrc: $('lrc').innerHTML,
+            lrcArea: $('lrcArea')
+        });
+    </script>
+</body>
+
+<style>
+    body{
+        background-color:rgb(255, 115, 0); ;
+    }
+    ul {
+        list-style-type: none;
+    }
+
+    li {
+        margin: 5px 0;
+    }
+
+    #lrcArea {
+        height: 600px;
+        width: 500px;
+        overflow: auto;
+    }
+    
+    .cur {
+        color:rgb(0, 255, 157);
+    }
+</style>
+
+</html>

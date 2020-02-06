@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>java script</title>
+    <link rel="stylesheet" href="css/normalize.8.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+<div id="todos">
+    <h1>todos</h1>
+    <div id="app">
+        <div class="title">
+            <div class="checkbox "></div>
+            <input class="add" autofocus="autofocus" autocomplete="off" placeholder="What needs to be done?">
+        </div>
+        <div class="items"></div>
+        <div class="footer">
+            <span class="state">20 items left</span>
+            <ul class="filters">
+                <li><a href="#/all" class="selected" onclick="filters(this)">All</a></li>
+                <li><a href="#/active" onclick="filters(this)">Active</a></li>
+                <li><a href="#/completed" onclick="filters(this)">Completed</a></li>
+            </ul>
+            <a class="clear-completed">
+                Clear completed
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    let id = 1;
+    let array = [];
+    let editIndex = -1;
+    let updateVal = "";
+
+    function returnId(id){
+        let item = array.find(item => item.id == id)
+        if(item){
+            let newId= id+1;
+            returnId(newId)
+        }else{
+            return id;
+        }
+    }
+
+    window.onload = () => {   
+
+        array = JSON.parse(localStorage.getItem("array")) || [];
+        id = localStorage.getItem("id") || 1;
+        init();
+    }
+
+    function query() {
+        rendering();
+        // 选择器
+        let items = document.querySelector(".items");
+        let item = document.querySelectorAll(".item")
+        let completedItem = document.querySelectorAll(".items .checkbox.checked")
+        let footer =document.querySelector(".footer"); 
+        let footerState = footer.querySelector(".state");
+        let footerRemoveCompled = footer.querySelector(".clear-completed");
+
+        let toggleAll = document.querySelector(".checkbox");
+        let filter = footer.querySelector(".filters a.selected");
+
+        let itemCheckbox = document.querySelectorAll(".item .checkbox");
+        // 总数
+        let total = item.length;
+        let completed = completedItem.length;
+        let active = total - completed;
+        let filterValue = filter.innerText;
+
+        
+        if (total === 0) {
+            items.style.display="none";
+            footer.style.display="none";
+            toggleAll.style.opacity="0";
+        } else {
+            items.style.display="block";
+            footer.style.display="flex";
+            toggleAll.style.opacity="1";
+            for(let i =0;i<total;i++){
+                item[i].setAttribute('style', 'opacity:1')
+            }
+        }
+        
+        for(let i =0;i<total;i++){
+            item[i].setAttribute('style', 'display:none')
+        }
+        switch (filterValue) {
+            case 'Active':
+                for(let i =0;i<itemCheckbox.length;i++){
+                    if(itemCheckbox[i].className.indexOf('checked')===-1){
+                        itemCheckbox[i].parentElement.parentElement.style.display="flex"
+                    }
+                }
+                break;
+            case 'Completed':
+                for(let i =0;i<completedItem.length;i++){
+                    completedItem[i].parentElement.parentElement.style.display="flex"
+                }
+                break;
+            default:
+                for(let i =0;i<total;i++){
+                    item[i].setAttribute('style', 'display:flex')
+                }
+                break;
+        }
+        // 全选
+        if (total === completed) {
+            toggleAll.classList.add('checked')
+        } else {
+            toggleAll.classList.remove("checked")
+        }
+
+        // 更新计数
+        footerState.innerHTML=(`${active} item${active > 1 ? 's' : ' '} left`);
+        // 更新删除完成 
+        footerRemoveCompled.style.opacity=(completed > 0 ? "1" : "0")
+    }
+    //渲染
+    function rendering(){
+        let items = document.querySelector(".items");
+        while(items.hasChildNodes()) {
+            try{
+				items.removeChild(items.firstChild);
+			}catch(err){
+				console.info(err)
+			}
+        }
+        for(let item of array) {
+            let checkboxDom = `
+                <div class="${item.toggle ? "checkbox checked":"checkbox"}" name="${item.id}" onclick="toggle(this)">
+                    <svg viewBox="12 13 29 22" stroke="currentColor" stroke-width="2"
+                            fill="none">
+                        <polyline points="13.2427972 23.7361617 21.8111153 32.3044798 38 16.1155951"></polyline>
+                    </svg>
+                </div>
+            `
+            let textDom = `
+                <div class="text" name="${item.id}"  ondblclick="update(this)">${item.text}</div>
+            `;
+
+            let removeDom = `
+                <div class="remove" name="${item.id}" onclick="deleteTask(this)">
+                    <svg viewBox="19 19 22 22" stroke-linecap="round" width="18" height="18"
+                            stroke="currentColor" stroke-width="2">
+                        <g transform="translate(21.000000, 21.000000)">
+                            <path d="M0.333333333,0.333333333 L17.4148373,17.4148373"></path>
+                            <path d="M0.333333333,0.333333333 L17.4148373,17.4148373"
+                                    transform="translate(9.000000, 9.000000) scale(-1, 1) translate(-9.000000, -9.000000)"></path>
+                        </g>
+                    </svg>
+                </div>
+            `;
+
+            let contentDom = `
+                <div class="content">
+                    ${checkboxDom}${textDom}${removeDom}
+                </div>
+            `;    
+
+            let editDom = `
+                <input type="text" class="edit" name="${item.id}" value="${item.text}" onkeydown="edit(this)" onblur="edit(this)">
+            `
+            let itemDom = `
+                <div class="${item.id == editIndex ? "item editing": "item"}">
+                    ${contentDom}${editDom}
+                </div>
+            `;
+            let dom = document.createElement("div")
+            dom.className="div"
+            dom.innerHTML=itemDom;
+            items.appendChild(dom);
+        }
+
+    }
+
+    function initEvents(){
+        let add = document.querySelector(".title .add")
+        let items = document.querySelector(".items")
+        let toggle = document.querySelector(".checkbox");
+        //添加
+        add.onkeydown =  () => {
+            if(event.keyCode == 13){
+                let textValue = add.value.trim();
+                if(!textValue)return
+                let newId = returnId(id++)
+                array.unshift({
+                    id:newId,
+                    text:textValue,
+                    toggle:false
+                })
+                add.value ="";
+                localStorage.setItem("array", JSON.stringify(array));
+                localStorage.setItem("id", id);
+                query();            
+            }
+        }
+
+        // 全选
+        toggle.onclick=function () {
+            let checked = this.className.indexOf('checked') == -1
+            let notChecked =document.querySelectorAll(".items .checkbox")
+            if (checked) {
+                array.forEach(el => el.toggle = true)
+            } else {
+                array.forEach(el => el.toggle = false)
+            }
+            localStorage.setItem("array", JSON.stringify(array));
+            localStorage.setItem("id", id);
+            query();
+        };
+
+        //删除全部
+        let footerRemoveCompled = document.querySelector(".clear-completed");
+        footerRemoveCompled.onclick= function (e) {
+            array = array.filter(user => !user.toggle);
+            localStorage.setItem("array", JSON.stringify(array));
+            localStorage.setItem("id", id);
+            query();
+        };
+        
+    }
+    //删除单个
+    function deleteTask(el) {
+        let id = el.getAttribute("name")
+        array = array.filter(item => item.id != id);
+        localStorage.setItem("array", JSON.stringify(array));
+        localStorage.setItem("id", id);
+        query();
+    }
+    
+    //选中单个
+    function toggle(obj){
+        let id = obj.getAttribute("name")
+        let item = array.find(item => item.id == id);
+        if (obj.className.indexOf('checked') === -1) {
+            item.toggle = true
+        } else {
+            item.toggle = false
+        }
+        localStorage.setItem("array", JSON.stringify(array));
+        localStorage.setItem("id", id);
+        query();
+    }
+      
+
+    function update(obj) {
+        editIndex = obj.getAttribute("name")
+        updateVal = obj.textContent.trim();
+        query()
+        let edit = document.querySelector(".editing .edit")
+        edit.value=""
+        edit.value=updateVal;
+        edit.focus();
+    } 
+
+    function edit(obj){
+        if (event.which === 13 || event.type === 'blur') {
+            if (!updateVal || !obj.value.trim()){ 
+				editIndex = -1;
+				updateVal ="";
+				query();
+				return;
+			}else if( updateVal==obj.value.trim()){
+				editIndex = -1;
+				updateVal ="";
+				query();
+				return;
+			}
+            let index = array.findIndex(user => user.id == editIndex); 
+            array.splice(index, 1)
+
+            array.unshift({
+                id: editIndex,
+                text:obj.value, 
+                toggle: false
+            })
+            editIndex = -1;
+            updateVal ="";
+            localStorage.setItem("array", JSON.stringify(array));
+            localStorage.setItem("id", id);
+            query();
+        }
+    }
+
+     //过滤器
+    function filters(obj) {
+        let select = document.querySelector(".filters a.selected")
+        event.stopPropagation();
+        event.preventDefault();
+
+        select.classList.remove("selected");
+
+        obj.classList.add("selected")
+        query();
+    }
+
+    function init() {
+        initEvents();
+        query();
+    }
+
+    init();
+</script>
+</html>

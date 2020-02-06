@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>vue-TodoMVC</title>
+    <link rel="stylesheet" href="css/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+</head>
+
+<body>
+    <div id="todos">
+        <h1>todos</h1>
+        <div id="app">
+            <div class="title">
+                <div :style="{opacity: count}" @click="checkedAll" :class="stutasAll"></div>
+                <input class="add" autofocus="autofocus" autocomplete="off" placeholder="What needs to be done?"
+                    class="new-todo" v-model="newItem" @keyup.enter="save">
+            </div>
+            <div class="items">
+                <div :class="['item', todo === editItem ? 'editing': '']" v-for="(todo,index) in sort"
+                    v-if="state(todo)">
+                    <div class="content">
+                        <div @click="upState(todo.id)" :class="['checkbox', todo.done ? 'checked': '']">
+                            <svg viewBox="12 13 29 22" stroke="currentColor" stroke-width="2" fill="none">
+                                <polyline points="13.2427972 23.7361617 21.8111153 32.3044798 38 16.1155951"></polyline>
+                            </svg>
+                        </div>
+                        <div class="text" @dblclick="editMode(todo)">{{todo.name}}</div>
+                        <div class="remove" @click="remove(todo.id)">
+                            <svg viewBox="19 19 22 22" stroke-linecap="round" width="18" height="18"
+                                stroke="currentColor" stroke-width="2">
+                                <g transform="translate(21.000000, 21.000000)">
+                                    <path d="M0.333333333,0.333333333 L17.4148373,17.4148373"></path>
+                                    <path d="M0.333333333,0.333333333 L17.4148373,17.4148373"
+                                        transform="translate(9.000000, 9.000000) scale(-1, 1) translate(-9.000000, -9.000000)">
+                                    </path>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                    <input v-if="todo === editItem" type="text" ref="text" class="edit" @keyup.enter="editAfter"
+                        @blur="cancleEdit()" @keyup.esc="cancleEdit" v-model="todo.name">
+                </div>
+                <div class="footer" v-show="todos.length>0">
+                    <span class="state">{{countActive}} item{{countActive > 1 ? 's': ''}} left</span>
+                    <ul class="filters">
+                        <li><a href="#/all" :class="{selected: filter === 'ALL'}"
+                                @click.prevent.stop="filter = 'ALL'">All</a></li>
+                        <li><a href="#/active" :class="{selected: filter === 'Active'}"
+                                @click.prevent.stop="filter = 'Active'">Active</a></li>
+                        <li><a href="#/completed" :class="{selected: filter === 'DONE'}"
+                                @click.prevent.stop="filter = 'DONE'">Completed</a></li>
+                    </ul>
+                    <a class="clear-completed" @click="clearAll" :style="{opacity: countDone > 0 ? 1: 0}">
+                        Clear completed
+                    </a>
+                </div>
+            </div>
+        </div>
+        <script>
+            new Vue({
+                el: '#app',
+                data: {
+                    filter: 'ALL',
+                    newItem: '',
+                    editItem: null,
+                    backeTodo: null,
+                    todos: JSON.parse(window.localStorage.getItem('app')) || []
+                },
+                watch: {
+                    todos: {
+                        deep: true,
+                        handler: function () {
+                            window.localStorage.setItem("app", JSON.stringify(this.todos)) 
+                        },
+                    }
+                },
+                methods: {
+                    //添加
+                    save() {
+                        if (!this.newItem) return;
+                        this.todos.push({
+                            id: this.todos.length + 1,
+                            name: this.newItem,
+                            done: false,
+                            time: new Date().getTime(),
+                        })
+                        this.newItem = '';
+                    },
+                    remove(id) { //删除todo
+                        this.todos = this.todos.filter(todo => todo.id !== id);
+                    },
+                    upState(id) { //修改状态
+                        this.todos.filter(todo => todo.id === id).forEach(todo => todo.done = !todo.done);
+                    },
+                    checkedAll() { //设置全部已完成
+                        let donedCount = this.todos.filter(todo => todo.done).length;
+                        this.todos.forEach(todo => todo.done = !(donedCount === this.todos.length));
+                    },
+                    clearAll() { //删除所有已完成的
+                        this.todos = this.todos.filter(todo => todo.done === false)
+                    },
+                    state(todo) {
+                        return (this.filter === 'ALL') || (this.filter === 'DONE' && todo.done) || (this.filter === 'Active' && !todo.done);
+                    },
+                    
+                    editMode(todo) {
+                        this.backTodo = JSON.parse(JSON.stringify(todo));
+                        this.editItem = todo;
+
+                        this.$nextTick(function () {
+                            this.$refs.text.forEach(ref => ref.focus());
+                        })
+                    },
+                     
+                    editAfter(id) {
+
+                        if( this.editItem.name == this.backTodo.name){
+                            this.editItem = this.backTodo = null;
+                            return
+                        }
+
+                        this.editItem.time = new Date().getTime();
+                        this.editItem = this.backTodo = null;
+                    },
+                    
+                    cancleEdit() {
+                        if (!this.editItem) return;
+                        for (let i = 0; i < this.todos.length; i++) {
+
+                            let todo = this.todos[i];
+
+                             if(this.editItem.name == todo.name){
+                                    return;
+                             }
+                            if (todo.id === this.backTodo.id) {
+                                this.todos.splice(i, 1, this.backTodo);
+                                break;
+                            }
+                        }
+                        // 恢复状态 
+                        this.editItem = this.backTodo = null;
+                    }
+                },
+
+                directives: {
+                    "todos-focus": function (el, binding) {
+                        if (binding.value) {
+                            el.focus()
+                        }
+                    }
+                },
+                computed: {
+                    count() {//统计任务个数
+                        return this.todos.length > 0 ? 1 : 0;
+                    },
+                    countDone() { // 统计已完成的个数
+                        return this.todos.filter(todo => todo.done).length;
+                    },
+                    countActive() { // 统计未完成的个数
+                        return this.todos.filter(todo => !todo.done).length;
+                    },
+                    stutasAll() {  //设置状态
+                        return ['checkbox', this.todos.filter(todo => !todo.done).length == 0 ? 'checked' : '']
+                    },
+                    sort() {//排序
+                        return this.todos.sort(function (a, b) { return b.time - a.time });
+                    }
+                }
+            });
+        </script>
+</body>
+
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>jquery-todoMVC</title>
+    <script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/normalize.8.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+    <div id="todos">
+        <h1>todos</h1>
+        <div id="app">
+            <div class="title">
+                <div class="checkbox" onclick="checkboxAll()"></div>
+                <input class="add" autofocus="autofocus" autocomplete="off" placeholder="What needs to be done?"
+                    class="new-todo">
+            </div>
+            <div class="items">
+                
+            </div>
+            <div class="footer">
+                <span class="state">0 items left</span>
+                <ul class="filters">
+                    <li><a href="#/all" class="selected">All</a></li>
+                    <li><a href="#/active">Active</a></li>
+                    <li><a href="#/completed">Completed</a></li>
+                </ul>
+                <a class="clear-completed" onclick="removeAll()">
+                    Clear completed
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+
+    (function saveData() {
+
+        var json = localStorage.getItem("data");
+        let data = JSON.parse(json)
+        console.info(data)
+
+        for (let i = 0; i < data.length; i++) {
+            $('.items').prepend('<div class="item">' +
+                '<div class="content">' +
+                '<div class="checkbox" onclick="checkbox(this)">' +
+                '<svg viewBox="12 13 29 22" stroke="currentColor" stroke-width="2" fill="none">' +
+                '<polyline points="13.2427972 23.7361617 21.8111153 32.3044798 38 16.1155951"></polyline>' +
+                '</svg>' +
+                '</div>' +
+                '<div class="text" ondblclick="edit(this)">' + data[i] + '</div>' +
+                '<div class="remove" onclick="remove(this)">' +
+                '<svg viewBox="19 19 22 22" stroke-linecap="round" width="18" height="18"' +
+                'stroke="currentColor" stroke-width="2">' +
+                '<g transform="translate(21.000000, 21.000000)">' +
+                '<path d="M0.333333333,0.333333333 L17.4148373,17.4148373"></path>' +
+                '<path d="M0.333333333,0.333333333 L17.4148373,17.4148373"' +
+                'transform="translate(9.000000, 9.000000) scale(-1, 1) translate(-9.000000, -9.000000)">' +
+                '</path>' +
+                '</g>' +
+                '</svg>' +
+                '</div>' +
+                '</div>' +
+                '<input type="text" class="edit">' +
+                '</div>')
+            $('.add').val('');
+        }
+    })();
+
+    showHide();
+
+    $('.add').keyup(function (event) {
+        if (event.keyCode == 13) {
+            let addValue = $('.add').val()
+            if (addValue == '') return;
+            $('.items').prepend('<div class="item">' +
+                '<div class="content">' +
+                '<div class="checkbox" onclick="checkbox(this)">' +
+                '<svg viewBox="12 13 29 22" stroke="currentColor" stroke-width="2" fill="none">' +
+                '<polyline points="13.2427972 23.7361617 21.8111153 32.3044798 38 16.1155951"></polyline>' +
+                '</svg>' +
+                '</div>' +
+                '<div class="text" ondblclick="edit(this)">' + addValue + '</div>' +
+                '<div class="remove" onclick="remove(this)">' +
+                '<svg viewBox="19 19 22 22" stroke-linecap="round" width="18" height="18"' +
+                'stroke="currentColor" stroke-width="2">' +
+                '<g transform="translate(21.000000, 21.000000)">' +
+                '<path d="M0.333333333,0.333333333 L17.4148373,17.4148373"></path>' +
+                '<path d="M0.333333333,0.333333333 L17.4148373,17.4148373"' +
+                'transform="translate(9.000000, 9.000000) scale(-1, 1) translate(-9.000000, -9.000000)">' +
+                '</path>' +
+                '</g>' +
+                '</svg>' +
+                '</div>' +
+                '</div>' +
+                '<input type="text" class="edit">' +
+                '</div>')
+            $('.add').val('');
+            showHide();
+        }
+    });
+
+    function showHide() {
+        let text = $('.text');
+
+        let newData = []
+        for (var i = 0; i < text.length; i++) {
+            newData.push(text[i].innerText)
+        }
+
+        localStorage.setItem("data", JSON.stringify(newData));
+
+        let index = 0;
+
+        if ($('li a.selected').text() == 'Completed') {
+            for (let i = 0; i < $('.item').length; i++) {
+                if ($('.item .checkbox')[i].className == 'checkbox') {
+                    $('.item')[i].style = 'display: none;';
+                } else {
+                    $('.item')[i].style = '';
+                }
+            }
+        }
+
+        if ($('li a.selected').text() == 'All') {
+            for (let i = 0; i < $('.item').length; i++) {
+                if ($('.item .checkbox')[i].className == 'checkbox checked') {
+                }
+            }
+            $('.item').show();
+        }
+
+        if ($('li a.selected').text() == 'Active') {
+            for (let i = 0; i < $('.item').length; i++) {
+                if ($('.item .checkbox')[i].className == 'checkbox checked') {
+                    $('.item')[i].style = 'display: none;';
+                } else {
+                    $('.item')[i].style = '';
+                }
+            }
+        }
+
+        let count = 0;
+        for (let i = 0; i < $(".item .checkbox").length; i++) {
+            if ($(".item .checkbox")[i].className != 'checkbox checked') {
+                count++;
+            } else {
+                index++;
+            }
+        }
+            //计数
+        let s = count > 1 ? 's' : '';
+        $('.state')[0].innerText = count + ' item' + s + ' left'
+
+        if (index == 0) {
+            $('.clear-completed')[0].style = "Visibility: hidden;"
+            $('.checkbox')[0].style = "Visibility: hidden;"
+        } else {
+            $('.clear-completed')[0].style = "";
+            $('.checkbox')[0].style = "";
+        }
+
+        if (index == $('.item .checkbox').length) {
+            $('.title .checkbox')[0].className = 'checkbox checked'
+        } else {
+            $('.title .checkbox')[0].className = 'checkbox'
+        }
+
+        if ($('.item .checkbox').length == 0) {
+            $('.footer')[0].style = 'display: none;'
+            $('.title .checkbox')[0].style = "Visibility: hidden;"
+        } else {
+            $('.title .checkbox')[0].style = "";
+            $('.footer')[0].style = ''
+        }
+    }
+
+    $('li a').click(function () {
+        $('a').removeClass('selected')
+        $(this).addClass("selected");
+
+        showHide();
+    })
+    //删除单个
+    function remove(e) {
+        $(e).closest(".item")[0].remove();
+        showHide();
+    }
+    //删除全部
+    function removeAll() {
+        var newArr = [];
+        for (var i = 1; i < $('.checkbox').length; i++) {
+            if ($('.checkbox')[i].className == 'checkbox checked') {
+                newArr.push($('.checkbox')[i].parentNode.parentNode);
+            }
+        }
+
+        for (var i = 0; i < newArr.length; i++) {
+            $('.items')[0].removeChild(newArr[i]);
+        }
+        showHide();
+    }
+
+    function checkbox(e) {
+        $(e).toggleClass(" checked");
+        showHide();
+    }
+    //全选
+    function checkboxAll() {
+        let count = 0;
+        for (var i = 0; i < $('.item .checkbox').length; i++) {
+            if ($('.item .checkbox')[i].className == 'checkbox checked') {
+                count++;
+            }
+        }
+
+        if (count != $('.item .checkbox').length) {
+            for (var i = 0; i < $('.item .checkbox').length; i++) {
+                if ($('.item .checkbox')[i].className != 'checkbox checked') {
+                    $('.item .checkbox')[i].className = 'checkbox checked';
+                }
+            }
+        } else {
+            for (var i = 0; i < $('.item .checkbox').length; i++) {
+                if ($('.item .checkbox')[i].className == 'checkbox checked') {
+                    $('.item .checkbox')[i].className = 'checkbox';
+                }
+            }
+        }
+        showHide();
+    }
+    //修改
+    function edit(e) {
+        let fatherNode = $(e).parent().parent();
+        fatherNode.addClass(" editing");
+        let oldVal = $(e).parent().parent().children('.content').children('.text');
+        fatherNode.children('input')[0].focus();
+        fatherNode.children('input')[0].value = oldVal.text()
+
+        
+
+        $(e).parent().parent().children('input').keyup(function (e) {
+            if (e.keyCode == 13) {
+                if ($(this).val() !== oldVal.text() && $(this).val() !== '') {
+                    oldVal.text($(this).val())
+                    fatherNode.remove()
+                    $('.items').prepend(fatherNode)
+                }
+                fatherNode.removeClass(' editing')
+                showHide();
+            }
+        })
+
+        $(e).parent().parent().children('input').blur(function () {
+            if ($(this).val() !== oldVal.text() && $(this).val() !== '') {
+                oldVal.text($(this).val())
+                fatherNode.remove()//排序
+                $('.items').prepend(fatherNode)
+            }
+            fatherNode.removeClass(' editing')
+            showHide();
+        })
+    }
+
+</script>
+
+</html>
